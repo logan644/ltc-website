@@ -77,7 +77,7 @@ export default function Services() {
           </h2>
           <p className="text-slate-600 text-lg">
             Project-based engagements with clear deliverables. I take on a
-            limited number of clients at a time to ensure every engagement
+            one client at a time to ensure every engagement
             gets the attention it deserves.
           </p>
         </div>
