@@ -1,0 +1,651 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title> Franchise Analytics — Demo Dashboard</title>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+      background: #f0f2f5;
+      color: #1a1a2e;
+      min-height: 100vh;
+    }
+
+    /* ── Header ── */
+    header {
+      background: linear-gradient(135deg, #1a1a2e 0%, #16213e 60%, #0f3460 100%);
+      color: white;
+      padding: 20px 32px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      box-shadow: 0 2px 12px rgba(0,0,0,.3);
+    }
+    .logo { display: flex; align-items: center; gap: 12px; }
+    .logo-icon {
+      width: 42px; height: 42px;
+      background: #e94560;
+      border-radius: 10px;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 22px;
+    }
+    .logo h1 { font-size: 20px; font-weight: 700; letter-spacing: -.3px; }
+    .logo p { font-size: 12px; color: #a0aec0; margin-top: 2px; }
+
+    .header-meta { text-align: right; }
+    .header-meta .period { font-size: 13px; color: #a0aec0; }
+    .header-meta .date { font-size: 12px; color: #718096; margin-top: 2px; }
+
+    .demo-badge {
+      background: #e94560;
+      color: white;
+      font-size: 11px;
+      font-weight: 700;
+      padding: 3px 10px;
+      border-radius: 20px;
+      letter-spacing: .5px;
+      margin-top: 6px;
+      display: inline-block;
+    }
+
+    /* ── Layout ── */
+    main { padding: 28px 32px; max-width: 1400px; margin: 0 auto; }
+
+    /* ── Section headers ── */
+    .section-label {
+      font-size: 11px;
+      font-weight: 700;
+      letter-spacing: 1.2px;
+      text-transform: uppercase;
+      color: #718096;
+      margin-bottom: 14px;
+      margin-top: 32px;
+    }
+    .section-label:first-child { margin-top: 0; }
+
+    /* ── KPI Cards ── */
+    .kpi-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+      gap: 16px;
+    }
+    .kpi-card {
+      background: white;
+      border-radius: 14px;
+      padding: 22px 24px;
+      box-shadow: 0 1px 4px rgba(0,0,0,.07);
+      border-left: 4px solid transparent;
+      position: relative;
+      overflow: hidden;
+    }
+    .kpi-card::after {
+      content: attr(data-icon);
+      position: absolute;
+      right: 18px; top: 16px;
+      font-size: 28px;
+      opacity: .13;
+    }
+    .kpi-card.blue  { border-left-color: #3b82f6; }
+    .kpi-card.green { border-left-color: #10b981; }
+    .kpi-card.amber { border-left-color: #f59e0b; }
+    .kpi-card.red   { border-left-color: #ef4444; }
+    .kpi-card.purple{ border-left-color: #8b5cf6; }
+
+    .kpi-label { font-size: 12px; color: #718096; font-weight: 600; letter-spacing: .3px; }
+    .kpi-value { font-size: 28px; font-weight: 800; margin: 6px 0 4px; color: #1a1a2e; }
+    .kpi-delta {
+      font-size: 12px; font-weight: 600;
+      display: flex; align-items: center; gap: 4px;
+    }
+    .kpi-delta.up   { color: #10b981; }
+    .kpi-delta.down { color: #ef4444; }
+    .kpi-delta.flat { color: #718096; }
+    .kpi-sub { font-size: 11px; color: #a0aec0; margin-top: 2px; }
+
+    /* ── Chart row ── */
+    .chart-grid {
+      display: grid;
+      grid-template-columns: 2fr 1fr;
+      gap: 20px;
+    }
+    @media (max-width: 900px) { .chart-grid { grid-template-columns: 1fr; } }
+
+    .card {
+      background: white;
+      border-radius: 14px;
+      padding: 24px;
+      box-shadow: 0 1px 4px rgba(0,0,0,.07);
+    }
+    .card-title {
+      font-size: 14px; font-weight: 700; color: #1a1a2e; margin-bottom: 4px;
+    }
+    .card-sub {
+      font-size: 12px; color: #a0aec0; margin-bottom: 20px;
+    }
+
+    .chart-wrap { position: relative; }
+    .chart-wrap.tall { height: 280px; }
+    .chart-wrap.med  { height: 240px; }
+
+    /* ── Efficiency score bar ── */
+    .score-list { display: flex; flex-direction: column; gap: 12px; }
+    .score-row { display: flex; align-items: center; gap: 10px; font-size: 13px; }
+    .score-name { width: 110px; font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .score-bar-wrap { flex: 1; background: #f0f2f5; border-radius: 99px; height: 8px; }
+    .score-bar { height: 8px; border-radius: 99px; }
+    .score-val { width: 34px; text-align: right; font-weight: 700; color: #1a1a2e; font-size: 12px; }
+
+    /* ── Definition Tooltips ── */
+    .def {
+      position: relative;
+      cursor: help;
+      border-bottom: 1px dashed #cbd5e0;
+    }
+    .def::after {
+      content: " ⓘ";
+      font-size: 10px;
+      color: #a0aec0;
+      vertical-align: super;
+      line-height: 0;
+    }
+    .def-tip {
+      display: none;
+      position: fixed;
+      z-index: 9999;
+      background: #1a1a2e;
+      color: #e2e8f0;
+      border-radius: 8px;
+      padding: 10px 14px;
+      width: 240px;
+      font-size: 12px;
+      line-height: 1.55;
+      font-weight: 400;
+      text-transform: none;
+      letter-spacing: 0;
+      box-shadow: 0 8px 24px rgba(0,0,0,.35);
+      pointer-events: none;
+    }
+    .def-tip strong {
+      display: block;
+      font-size: 12px;
+      font-weight: 700;
+      color: white;
+      margin-bottom: 5px;
+    }
+    .def-tip .tip-formula {
+      margin-top: 6px;
+      padding-top: 6px;
+      border-top: 1px solid #2d3748;
+      font-size: 11px;
+      color: #a0aec0;
+    }
+    /* show/hide handled by JS */
+
+    /* ── Table ── */
+    .table-wrap { overflow-x: auto; }
+    table { width: 100%; border-collapse: collapse; font-size: 13px; }
+    thead tr { border-bottom: 2px solid #f0f2f5; }
+    thead th {
+      text-align: left; padding: 10px 14px;
+      font-size: 11px; font-weight: 700; letter-spacing: .5px;
+      text-transform: uppercase; color: #a0aec0;
+    }
+    tbody tr { border-bottom: 1px solid #f9fafb; transition: background .15s; }
+    tbody tr:hover { background: #f9fafb; }
+    tbody td { padding: 12px 14px; }
+
+    .rank {
+      width: 28px; height: 28px;
+      border-radius: 50%; display: inline-flex; align-items: center; justify-content: center;
+      font-size: 12px; font-weight: 700;
+    }
+    .rank.top3 { background: #fef3c7; color: #92400e; }
+    .rank.bot3 { background: #fee2e2; color: #991b1b; }
+    .rank.mid  { background: #f0f2f5; color: #718096; }
+
+    .pill {
+      display: inline-block; padding: 3px 10px;
+      border-radius: 99px; font-size: 11px; font-weight: 700;
+    }
+    .pill.excellent { background: #d1fae5; color: #065f46; }
+    .pill.good      { background: #dbeafe; color: #1e40af; }
+    .pill.average   { background: #fef3c7; color: #92400e; }
+    .pill.poor      { background: #fee2e2; color: #991b1b; }
+
+    .trend-up   { color: #10b981; font-weight: 700; }
+    .trend-down { color: #ef4444; font-weight: 700; }
+    .trend-flat { color: #a0aec0; }
+
+    .mini-bar-wrap { width: 80px; background: #f0f2f5; border-radius: 99px; height: 6px; display: inline-block; vertical-align: middle; margin-right: 6px; }
+    .mini-bar { height: 6px; border-radius: 99px; }
+
+    /* ── Insight callouts ── */
+    .insights { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 16px; }
+    .insight-card {
+      border-radius: 12px; padding: 18px 20px;
+      display: flex; gap: 14px; align-items: flex-start;
+    }
+    .insight-card.warn  { background: #fffbeb; border: 1px solid #fde68a; }
+    .insight-card.good  { background: #ecfdf5; border: 1px solid #6ee7b7; }
+    .insight-card.info  { background: #eff6ff; border: 1px solid #bfdbfe; }
+    .insight-icon { font-size: 22px; flex-shrink: 0; margin-top: 1px; }
+    .insight-title { font-size: 13px; font-weight: 700; margin-bottom: 4px; }
+    .insight-body  { font-size: 12px; color: #4b5563; line-height: 1.5; }
+
+    /* ── Footer ── */
+    footer {
+      text-align: center; padding: 28px 32px;
+      font-size: 11px; color: #a0aec0; border-top: 1px solid #e5e7eb;
+      margin-top: 40px;
+    }
+  </style>
+</head>
+<body>
+
+<header>
+  <div class="logo">
+    <div class="logo-icon">🪵</div>
+    <div>
+      <h1>Franchise Analytics</h1>
+    </div>
+  </div>
+  <div class="header-meta">
+    <div class="period">Reporting Period: Q2 2026 (Apr – Jun)</div>
+    <div class="date">As of June 26, 2026</div>
+    <div class="demo-badge">DEMO DATA</div>
+  </div>
+</header>
+
+<main>
+
+  <!-- ── KPIs ── -->
+  <div class="section-label">Network-Wide Summary — 18 Locations</div>
+  <div class="kpi-grid">
+    <div class="kpi-card blue" data-icon="💰">
+      <div class="kpi-label">
+        <span class="def">Total Revenue (Q2)
+          <span class="def-tip"><strong>Total Revenue (Q2)</strong>Sum of all invoiced sales across the franchise network for the quarter, before any cost deductions.<div class="tip-formula">= Σ(location revenue) · Apr – Jun</div></span>
+        </span>
+      </div>
+      <div class="kpi-value">$4.7M</div>
+      <div class="kpi-delta up">▲ 11.3% vs Q2 2025</div>
+      <div class="kpi-sub">$261K avg per location</div>
+    </div>
+    <div class="kpi-card green" data-icon="📈">
+      <div class="kpi-label">
+        <span class="def">Avg Gross Margin
+          <span class="def-tip"><strong>Avg Gross Margin</strong>Average of each location's gross margin percentage — revenue minus cost of goods (materials, labor) divided by revenue.<div class="tip-formula">= (Revenue − COGS) ÷ Revenue · averaged across locations</div></span>
+        </span>
+      </div>
+      <div class="kpi-value">38.2%</div>
+      <div class="kpi-delta up">▲ 2.1 pts vs prior year</div>
+      <div class="kpi-sub">Range: 24% – 51%</div>
+    </div>
+    <div class="kpi-card amber" data-icon="⏱">
+      <div class="kpi-label">
+        <span class="def">Avg Job Cycle Time
+          <span class="def-tip"><strong>Avg Job Cycle Time</strong>Average number of calendar days from signed work order to completed installation sign-off, averaged across all jobs in the period.<div class="tip-formula">= Avg(install complete date − order date) · network average</div></span>
+        </span>
+      </div>
+      <div class="kpi-value">4.8 days</div>
+      <div class="kpi-delta down">▼ 0.6 days vs Q1</div>
+      <div class="kpi-sub">Target: ≤ 4.5 days</div>
+    </div>
+    <div class="kpi-card purple" data-icon="⭐">
+      <div class="kpi-label">
+        <span class="def">Avg Customer Score
+          <span class="def-tip"><strong>Avg Customer Satisfaction</strong>Average star rating collected via post-job customer survey, on a 1–5 scale. Includes all reviews submitted within 30 days of job completion.<div class="tip-formula">= Σ(review scores) ÷ total reviews · all locations</div></span>
+        </span>
+      </div>
+      <div class="kpi-value">4.31</div>
+      <div class="kpi-delta flat">— Flat vs Q1</div>
+      <div class="kpi-sub">Out of 5.0 · 1,840 reviews</div>
+    </div>
+    <div class="kpi-card red" data-icon="🔄">
+      <div class="kpi-label">
+        <span class="def">Material Waste Rate
+          <span class="def-tip"><strong>Material Waste Rate</strong>Percentage of material ordered that is discarded as offcut or damaged — not installed. Industry benchmark is ~5%.<div class="tip-formula">= (Material ordered − Material installed) ÷ Material ordered</div></span>
+        </span>
+      </div>
+      <div class="kpi-value">6.4%</div>
+      <div class="kpi-delta down">▼ 1.2 pts vs Q1</div>
+      <div class="kpi-sub">Industry benchmark: 5%</div>
+    </div>
+  </div>
+
+  <!-- ── Revenue + Efficiency Chart Row ── -->
+  <div class="section-label">Revenue & Efficiency by Location</div>
+  <div class="chart-grid">
+
+    <div class="card">
+      <div class="card-title">Q2 Revenue vs. Gross Margin by Location</div>
+      <div class="card-sub">Bubble size = job volume · Color = efficiency tier</div>
+      <div class="chart-wrap tall">
+        <canvas id="bubbleChart"></canvas>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-title">Composite Efficiency Score</div>
+      <div class="card-sub">Weighted index: margin, cycle time, waste, customer satisfaction</div>
+      <div class="score-list" id="scoreList"></div>
+    </div>
+
+  </div>
+
+  <!-- ── Trend Chart ── -->
+  <div class="section-label">Monthly Revenue Trend — Top 5 vs Bottom 5 Locations</div>
+  <div class="card">
+    <div class="card-title">Revenue Trend (Jan – Jun 2026)</div>
+    <div class="card-sub">Average monthly revenue across top-5 and bottom-5 performing franchise groups</div>
+    <div class="chart-wrap med">
+      <canvas id="trendChart"></canvas>
+    </div>
+  </div>
+
+  <!-- ── Location Table ── -->
+  <div class="section-label">All Franchise Locations — Ranked by Efficiency Score</div>
+  <div class="card">
+    <div class="table-wrap">
+      <table id="locationTable">
+        <thead>
+          <tr>
+            <th>Rank</th>
+            <th>Location</th>
+            <th><span class="def">Q2 Revenue<span class="def-tip"><strong>Q2 Revenue</strong>Total invoiced sales for this location April–June 2026, before any cost deductions.</span></span></th>
+            <th><span class="def">Gross Margin<span class="def-tip"><strong>Gross Margin</strong>Revenue minus cost of goods (materials + direct labor) as a percentage of revenue. Higher is better.<div class="tip-formula">= (Revenue − COGS) ÷ Revenue</div></span></span></th>
+            <th><span class="def">Cycle Time<span class="def-tip"><strong>Job Cycle Time</strong>Average calendar days from signed work order to installation sign-off. Network target is ≤ 4.5 days.</span></span></th>
+            <th><span class="def">Customer Satisfaction<span class="def-tip"><strong>Customer Satisfaction Score</strong>Average post-job star rating (1–5 scale) from customer surveys submitted within 30 days of job completion.</span></span></th>
+            <th><span class="def">Waste Rate<span class="def-tip"><strong>Material Waste Rate</strong>Percentage of ordered material that is discarded as offcut or damaged. Industry benchmark is ~5%.<div class="tip-formula">= (Ordered − Installed) ÷ Ordered</div></span></span></th>
+            <th><span class="def">Efficiency Score<span class="def-tip"><strong>Composite Efficiency Score</strong>Weighted index out of 100 combining four metrics.<div class="tip-formula">Gross Margin 40% · Cycle Time 25% · Customer Satisfaction 25% · Waste Rate 10%</div></span></span></th>
+            <th><span class="def">Trend<span class="def-tip"><strong>Revenue Trend</strong>Direction of this location's monthly revenue over the past 6 months relative to its own prior-period baseline.</span></span></th>
+            <th>Status</th>
+          </tr>
+        </thead>
+        <tbody id="tableBody"></tbody>
+      </table>
+    </div>
+  </div>
+
+  <!-- ── Insights ── -->
+  <div class="section-label">Automated Insights</div>
+  <div class="insights">
+    <div class="insight-card warn">
+      <div class="insight-icon">⚠️</div>
+      <div>
+        <div class="insight-title">3 Locations Below Margin Threshold</div>
+        <div class="insight-body">Memphis, Little Rock, and Tulsa are all below the 28% gross margin floor. Memphis has been underperforming for 3 consecutive quarters — may warrant a franchisee coaching engagement.</div>
+      </div>
+    </div>
+    <div class="insight-card good">
+      <div class="insight-icon">🏆</div>
+      <div>
+        <div class="insight-title">Nashville Outperforming Peers by 22%</div>
+        <div class="insight-body">Nashville leads the network in both margin (51%) and cycle time (3.1 days). Their job scheduling and crew utilization model may be worth documenting as a playbook for other locations.</div>
+      </div>
+    </div>
+    <div class="insight-card info">
+      <div class="insight-icon">📦</div>
+      <div>
+        <div class="insight-title">Material Waste Improving Network-Wide</div>
+        <div class="insight-body">Q2 waste rates dropped 1.2 pts after the Q1 vendor consolidation. However, 5 locations still exceed 8%. Targeted training on cut-plan optimization could close this gap.</div>
+      </div>
+    </div>
+    <div class="insight-card info">
+      <div class="insight-icon">🗺️</div>
+      <div>
+        <div class="insight-title">Midwest Cluster Showing Regional Softness</div>
+        <div class="insight-body">Kansas City, St. Louis, and Indianapolis all saw revenue dip ≥5% QoQ. Regional housing permit data suggests a short-term slowdown — remodeling demand in these markets may lag 1–2 quarters.</div>
+      </div>
+    </div>
+  </div>
+
+</main>
+
+<footer>
+  This is a demo dashboard built to illustrate what a franchise analytics platform could look like for your organization.<br>
+  All data shown is synthetic and for illustration purposes only. · Built by Logan Taylor Consulting
+</footer>
+
+<script>
+// ── Data ──────────────────────────────────────────────────────────────────────
+const locations = [
+  { name: "Nashville, TN",    revenue: 412000, margin: 51, cycle: 3.1, csat: 4.8, waste: 3.9 },
+  { name: "Charlotte, NC",    revenue: 388000, margin: 47, cycle: 3.6, csat: 4.7, waste: 4.2 },
+  { name: "Austin, TX",       revenue: 371000, margin: 45, cycle: 3.8, csat: 4.6, waste: 4.5 },
+  { name: "Denver, CO",       revenue: 349000, margin: 43, cycle: 4.0, csat: 4.5, waste: 5.1 },
+  { name: "Phoenix, AZ",      revenue: 334000, margin: 41, cycle: 4.1, csat: 4.5, waste: 5.3 },
+  { name: "Atlanta, GA",      revenue: 318000, margin: 40, cycle: 4.2, csat: 4.4, waste: 5.5 },
+  { name: "Tampa, FL",        revenue: 302000, margin: 39, cycle: 4.3, csat: 4.4, waste: 5.6 },
+  { name: "Columbus, OH",     revenue: 289000, margin: 38, cycle: 4.4, csat: 4.3, waste: 5.8 },
+  { name: "Raleigh, NC",      revenue: 275000, margin: 37, cycle: 4.5, csat: 4.3, waste: 6.0 },
+  { name: "Richmond, VA",     revenue: 261000, margin: 35, cycle: 4.7, csat: 4.2, waste: 6.3 },
+  { name: "Louisville, KY",   revenue: 248000, margin: 33, cycle: 4.9, csat: 4.1, waste: 6.7 },
+  { name: "Kansas City, MO",  revenue: 234000, margin: 32, cycle: 5.1, csat: 4.0, waste: 7.0 },
+  { name: "Indianapolis, IN", revenue: 221000, margin: 31, cycle: 5.3, csat: 3.9, waste: 7.4 },
+  { name: "St. Louis, MO",    revenue: 208000, margin: 29, cycle: 5.5, csat: 3.8, waste: 7.8 },
+  { name: "Tulsa, OK",        revenue: 196000, margin: 27, cycle: 5.8, csat: 3.7, waste: 8.3 },
+  { name: "Little Rock, AR",  revenue: 184000, margin: 26, cycle: 6.1, csat: 3.6, waste: 8.8 },
+  { name: "Memphis, TN",      revenue: 172000, margin: 25, cycle: 6.4, csat: 3.5, waste: 9.2 },
+  { name: "Wichita, KS",      revenue: 159000, margin: 24, cycle: 6.8, csat: 3.4, waste: 9.8 },
+];
+
+// Composite efficiency score: higher is better
+// margin(40%) + inverse cycle(25%) + customer satisfaction(25%) + inverse waste(10%)
+function efficiencyScore(loc) {
+  const mS  = loc.margin / 55 * 100;               // 55% as ceiling
+  const cS  = Math.max(0, (8 - loc.cycle) / 5) * 100;  // 3–8 range
+  const qS  = (loc.csat / 5) * 100;
+  const wS  = Math.max(0, (12 - loc.waste) / 10) * 100;
+  return Math.round(mS * .40 + cS * .25 + qS * .25 + wS * .10);
+}
+
+const scored = locations.map((l, i) => ({
+  ...l,
+  score: efficiencyScore(l),
+  rank: i + 1,
+  trend: i < 5 ? "up" : i >= 13 ? "down" : "flat",
+  jobs: Math.round(140 - i * 6 + Math.random() * 10),
+})).sort((a, b) => b.score - a.score).map((l, i) => ({ ...l, rank: i + 1 }));
+
+// ── Color helpers ──────────────────────────────────────────────────────────────
+function tierColor(score) {
+  if (score >= 80) return { bg: "#10b981", label: "excellent" };
+  if (score >= 65) return { bg: "#3b82f6", label: "good" };
+  if (score >= 48) return { bg: "#f59e0b", label: "average" };
+  return { bg: "#ef4444", label: "poor" };
+}
+
+function pillHTML(score) {
+  const t = tierColor(score);
+  return `<span class="pill ${t.label}">${t.label.charAt(0).toUpperCase() + t.label.slice(1)}</span>`;
+}
+
+// ── Efficiency Score bars (sidebar) ──────────────────────────────────────────
+const top6 = scored.slice(0, 6);
+const scoreList = document.getElementById("scoreList");
+scoreList.innerHTML = top6.map(l => {
+  const t = tierColor(l.score);
+  return `
+    <div class="score-row">
+      <span class="score-name" title="${l.name}">${l.name.split(",")[0]}</span>
+      <div class="score-bar-wrap">
+        <div class="score-bar" style="width:${l.score}%;background:${t.bg}"></div>
+      </div>
+      <span class="score-val">${l.score}</span>
+    </div>`;
+}).join("") + `<div style="font-size:11px;color:#a0aec0;margin-top:10px;text-align:center;">Showing top 6 · see full table below</div>`;
+
+// ── Bubble Chart ──────────────────────────────────────────────────────────────
+const bubbleData = scored.map(l => ({
+  x: l.revenue / 1000,
+  y: l.margin,
+  r: Math.sqrt(l.jobs) * 1.4,
+  label: l.name.split(",")[0],
+  score: l.score,
+}));
+
+new Chart(document.getElementById("bubbleChart"), {
+  type: "bubble",
+  data: {
+    datasets: [{
+      label: "Franchise Locations",
+      data: bubbleData,
+      backgroundColor: bubbleData.map(d => {
+        const t = tierColor(d.score);
+        return t.bg + "aa";
+      }),
+      borderColor: bubbleData.map(d => tierColor(d.score).bg),
+      borderWidth: 1.5,
+    }]
+  },
+  options: {
+    responsive: true, maintainAspectRatio: false,
+    plugins: {
+      legend: { display: false },
+      tooltip: {
+        callbacks: {
+          label: ctx => {
+            const d = ctx.raw;
+            return [
+              `Location: ${d.label}`,
+              `Revenue: $${(d.x * 1000).toLocaleString()}`,
+              `Margin: ${d.y}%`,
+              `Efficiency Score: ${d.score}`,
+            ];
+          }
+        }
+      }
+    },
+    scales: {
+      x: {
+        title: { display: true, text: "Q2 Revenue ($K)", font: { size: 11 }, color: "#718096" },
+        ticks: { callback: v => `$${v}K`, color: "#a0aec0", font: { size: 11 } },
+        grid: { color: "#f0f2f5" },
+      },
+      y: {
+        title: { display: true, text: "Gross Margin (%)", font: { size: 11 }, color: "#718096" },
+        ticks: { callback: v => `${v}%`, color: "#a0aec0", font: { size: 11 } },
+        grid: { color: "#f0f2f5" },
+      }
+    }
+  }
+});
+
+// ── Trend Chart ──────────────────────────────────────────────────────────────
+const months = ["Jan", "Feb", "Mar", "Apr", "May", "Jun"];
+const top5Trend    = [68, 72, 74, 78, 81, 84];
+const bottom5Trend = [28, 27, 29, 26, 27, 25];
+const networkAvg   = [48, 50, 51, 53, 54, 55];
+
+new Chart(document.getElementById("trendChart"), {
+  type: "line",
+  data: {
+    labels: months,
+    datasets: [
+      {
+        label: "Top 5 Locations",
+        data: top5Trend,
+        borderColor: "#10b981",
+        backgroundColor: "#10b98118",
+        fill: true,
+        tension: .4, pointRadius: 4, pointBackgroundColor: "#10b981",
+      },
+      {
+        label: "Network Average",
+        data: networkAvg,
+        borderColor: "#3b82f6",
+        backgroundColor: "transparent",
+        borderDash: [6, 4],
+        tension: .4, pointRadius: 3, pointBackgroundColor: "#3b82f6",
+      },
+      {
+        label: "Bottom 5 Locations",
+        data: bottom5Trend,
+        borderColor: "#ef4444",
+        backgroundColor: "#ef444418",
+        fill: true,
+        tension: .4, pointRadius: 4, pointBackgroundColor: "#ef4444",
+      }
+    ]
+  },
+  options: {
+    responsive: true, maintainAspectRatio: false,
+    plugins: {
+      legend: { position: "top", labels: { font: { size: 12 }, color: "#4b5563", padding: 20 } },
+      tooltip: {
+        callbacks: { label: ctx => ` ${ctx.dataset.label}: $${ctx.parsed.y}K avg monthly revenue` }
+      }
+    },
+    scales: {
+      y: {
+        title: { display: true, text: "Avg Monthly Revenue ($K)", font: { size: 11 }, color: "#718096" },
+        ticks: { callback: v => `$${v}K`, color: "#a0aec0" },
+        grid: { color: "#f0f2f5" },
+      },
+      x: { ticks: { color: "#a0aec0" }, grid: { display: false } }
+    }
+  }
+});
+
+// ── Table ─────────────────────────────────────────────────────────────────────
+const tbody = document.getElementById("tableBody");
+tbody.innerHTML = scored.map(l => {
+  const rank   = l.rank;
+  const rankCls = rank <= 3 ? "top3" : rank >= 16 ? "bot3" : "mid";
+  const trendHTML = l.trend === "up"
+    ? `<span class="trend-up">▲ Growing</span>`
+    : l.trend === "down"
+    ? `<span class="trend-down">▼ Declining</span>`
+    : `<span class="trend-flat">→ Stable</span>`;
+  const maxRev = scored[0].revenue;
+  const barColor = tierColor(l.score).bg;
+
+  return `<tr>
+    <td><span class="rank ${rankCls}">${rank}</span></td>
+    <td><strong>${l.name}</strong></td>
+    <td>
+      <span class="mini-bar-wrap"><span class="mini-bar" style="width:${Math.round(l.revenue/maxRev*100)}%;background:${barColor}"></span></span>
+      $${(l.revenue / 1000).toFixed(0)}K
+    </td>
+    <td>${l.margin}%</td>
+    <td>${l.cycle} days</td>
+    <td>${l.csat.toFixed(1)} / 5.0</td>
+    <td>${l.waste}%</td>
+    <td><strong>${l.score}</strong> / 100</td>
+    <td>${trendHTML}</td>
+    <td>${pillHTML(l.score)}</td>
+  </tr>`;
+}).join("");
+// ── Tooltip show/hide + cursor tracking ──────────────────────────────────────
+let activeTip = null;
+
+document.querySelectorAll(".def").forEach(el => {
+  const tip = el.querySelector(".def-tip");
+  if (!tip) return;
+
+  el.addEventListener("mouseenter", () => { activeTip = tip; });
+  el.addEventListener("mouseleave", () => {
+    tip.style.display = "none";
+    activeTip = null;
+  });
+});
+
+document.addEventListener("mousemove", e => {
+  if (!activeTip) return;
+  const pad = 12, tw = 240, th = activeTip.offsetHeight || 120;
+  let x = e.clientX + pad;
+  let y = e.clientY + pad;
+  if (x + tw > window.innerWidth  - pad) x = e.clientX - tw - pad;
+  if (y + th > window.innerHeight - pad) y = e.clientY - th - pad;
+  activeTip.style.left = x + "px";
+  activeTip.style.top  = y + "px";
+  activeTip.style.display = "block";
+});
+</script>
+</body>
+</html>
