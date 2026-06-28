@@ -236,6 +236,56 @@
     .insight-title { font-size: 13px; font-weight: 700; margin-bottom: 4px; }
     .insight-body  { font-size: 12px; color: #4b5563; line-height: 1.5; }
 
+    /* ── Filter bar ── */
+    .filter-bar {
+      display: flex; align-items: center; gap: 12px; flex-wrap: wrap;
+      margin-bottom: 16px;
+    }
+    .filter-label { font-size: 12px; font-weight: 700; color: #718096; white-space: nowrap; }
+    .filter-dropdown { position: relative; }
+    .filter-btn {
+      background: white; border: 1.5px solid #e2e8f0; border-radius: 8px;
+      padding: 7px 14px; font-size: 13px; font-weight: 600; color: #1a1a2e;
+      cursor: pointer; display: flex; align-items: center; gap: 8px;
+      white-space: nowrap; min-width: 200px; justify-content: space-between;
+    }
+    .filter-btn:hover { border-color: #a0aec0; }
+    .filter-btn .caret { font-size: 10px; color: #718096; }
+    .filter-panel {
+      display: none; position: absolute; top: calc(100% + 6px); left: 0;
+      background: white; border: 1.5px solid #e2e8f0; border-radius: 10px;
+      box-shadow: 0 8px 24px rgba(0,0,0,.12); z-index: 1000;
+      min-width: 240px; padding: 10px 0;
+    }
+    .filter-panel.open { display: block; }
+    .filter-panel-actions {
+      display: flex; gap: 8px; padding: 8px 14px 10px;
+      border-bottom: 1px solid #f0f2f5; margin-bottom: 4px;
+    }
+    .filter-action-btn {
+      font-size: 11px; font-weight: 700; color: #3b82f6; background: none;
+      border: none; cursor: pointer; padding: 0;
+    }
+    .filter-action-btn:hover { color: #1d4ed8; }
+    .filter-option {
+      display: flex; align-items: center; gap: 10px;
+      padding: 7px 14px; cursor: pointer; font-size: 13px;
+    }
+    .filter-option:hover { background: #f9fafb; }
+    .filter-option input[type="checkbox"] { accent-color: #3b82f6; width: 14px; height: 14px; }
+    .filter-clear-btn {
+      background: #f0f2f5; border: none; border-radius: 6px;
+      padding: 7px 12px; font-size: 12px; font-weight: 600; color: #718096;
+      cursor: pointer;
+    }
+    .filter-clear-btn:hover { background: #e2e8f0; color: #1a1a2e; }
+
+    /* ── Sortable table headers ── */
+    thead th { cursor: pointer; user-select: none; }
+    thead th:hover { color: #4b5563; }
+    thead th.sort-asc::after  { content: " ▲"; font-size: 9px; color: #3b82f6; }
+    thead th.sort-desc::after { content: " ▼"; font-size: 9px; color: #3b82f6; }
+
     /* ── Footer ── */
     footer {
       text-align: center; padding: 28px 32px;
@@ -262,58 +312,72 @@
 
 <main>
 
+  <!-- ── Filter bar ── -->
+  <div class="filter-bar" style="margin-bottom:24px;margin-top:4px;">
+    <span class="filter-label">Filter locations:</span>
+    <div class="filter-dropdown" id="filterDropdown">
+      <button class="filter-btn" id="filterBtn">
+        <span id="filterBtnLabel">All 18 locations</span>
+        <span class="caret">▼</span>
+      </button>
+      <div class="filter-panel" id="filterPanel">
+        <div class="filter-panel-actions">
+          <button class="filter-action-btn" id="selectAllBtn">Select all</button>
+          <button class="filter-action-btn" id="clearAllBtn">Clear all</button>
+        </div>
+        <div id="filterOptions"></div>
+      </div>
+    </div>
+    <button class="filter-clear-btn" id="resetFilterBtn">Reset</button>
+  </div>
+
   <!-- ── KPIs ── -->
-  <div class="section-label">Network-Wide Summary — 18 Locations</div>
+  <div class="section-label" id="kpiLabel">Network-Wide Summary — 18 Locations</div>
   <div class="kpi-grid">
     <div class="kpi-card blue" data-icon="💰">
       <div class="kpi-label">
         <span class="def">Total Revenue (Q2)
-          <span class="def-tip"><strong>Total Revenue (Q2)</strong>Sum of all invoiced sales across the franchise network for the quarter, before any cost deductions.<div class="tip-formula">= Σ(location revenue) · Apr – Jun</div></span>
+          <span class="def-tip"><strong>Total Revenue (Q2)</strong>Sum of all invoiced sales across the selected locations for the quarter, before any cost deductions.<div class="tip-formula">= Σ(location revenue) · Apr – Jun</div></span>
         </span>
       </div>
-      <div class="kpi-value">$4.7M</div>
-      <div class="kpi-delta up">▲ 11.3% vs Q2 2025</div>
-      <div class="kpi-sub">$261K avg per location</div>
+      <div class="kpi-value" id="kpi-revenue">$4.7M</div>
+      <div class="kpi-sub" id="kpi-revenue-sub">$261K avg per location</div>
     </div>
     <div class="kpi-card green" data-icon="📈">
       <div class="kpi-label">
         <span class="def">Avg Gross Margin
-          <span class="def-tip"><strong>Avg Gross Margin</strong>Average of each location's gross margin percentage — revenue minus cost of goods (materials, labor) divided by revenue.<div class="tip-formula">= (Revenue − COGS) ÷ Revenue · averaged across locations</div></span>
+          <span class="def-tip"><strong>Avg Gross Margin</strong>Average of each selected location's gross margin percentage — revenue minus cost of goods (materials, labor) divided by revenue.<div class="tip-formula">= (Revenue − COGS) ÷ Revenue · averaged across locations</div></span>
         </span>
       </div>
-      <div class="kpi-value">38.2%</div>
-      <div class="kpi-delta up">▲ 2.1 pts vs prior year</div>
-      <div class="kpi-sub">Range: 24% – 51%</div>
+      <div class="kpi-value" id="kpi-margin">38.2%</div>
+      <div class="kpi-sub" id="kpi-margin-sub">Range: 24% – 51%</div>
     </div>
     <div class="kpi-card amber" data-icon="⏱">
       <div class="kpi-label">
         <span class="def">Avg Job Cycle Time
-          <span class="def-tip"><strong>Avg Job Cycle Time</strong>Average number of calendar days from signed work order to completed installation sign-off, averaged across all jobs in the period.<div class="tip-formula">= Avg(install complete date − order date) · network average</div></span>
+          <span class="def-tip"><strong>Avg Job Cycle Time</strong>Average number of calendar days from signed work order to completed installation sign-off, averaged across all jobs in the period.<div class="tip-formula">= Avg(install complete date − order date) · selected locations</div></span>
         </span>
       </div>
-      <div class="kpi-value">4.8 days</div>
-      <div class="kpi-delta down">▼ 0.6 days vs Q1</div>
-      <div class="kpi-sub">Target: ≤ 4.5 days</div>
+      <div class="kpi-value" id="kpi-cycle">4.8 days</div>
+      <div class="kpi-sub" id="kpi-cycle-sub">Target: ≤ 4.5 days</div>
     </div>
     <div class="kpi-card purple" data-icon="⭐">
       <div class="kpi-label">
         <span class="def">Avg Customer Score
-          <span class="def-tip"><strong>Avg Customer Satisfaction</strong>Average star rating collected via post-job customer survey, on a 1–5 scale. Includes all reviews submitted within 30 days of job completion.<div class="tip-formula">= Σ(review scores) ÷ total reviews · all locations</div></span>
+          <span class="def-tip"><strong>Avg Customer Satisfaction</strong>Average star rating collected via post-job customer survey, on a 1–5 scale. Includes all reviews submitted within 30 days of job completion.<div class="tip-formula">= Σ(review scores) ÷ total reviews · selected locations</div></span>
         </span>
       </div>
-      <div class="kpi-value">4.31</div>
-      <div class="kpi-delta flat">— Flat vs Q1</div>
-      <div class="kpi-sub">Out of 5.0 · 1,840 reviews</div>
+      <div class="kpi-value" id="kpi-csat">4.31</div>
+      <div class="kpi-sub" id="kpi-csat-sub">Out of 5.0</div>
     </div>
     <div class="kpi-card red" data-icon="🔄">
       <div class="kpi-label">
-        <span class="def">Material Waste Rate
+        <span class="def">Avg Waste Rate
           <span class="def-tip"><strong>Material Waste Rate</strong>Percentage of material ordered that is discarded as offcut or damaged — not installed. Industry benchmark is ~5%.<div class="tip-formula">= (Material ordered − Material installed) ÷ Material ordered</div></span>
         </span>
       </div>
-      <div class="kpi-value">6.4%</div>
-      <div class="kpi-delta down">▼ 1.2 pts vs Q1</div>
-      <div class="kpi-sub">Industry benchmark: 5%</div>
+      <div class="kpi-value" id="kpi-waste">6.4%</div>
+      <div class="kpi-sub" id="kpi-waste-sub">Industry benchmark: 5%</div>
     </div>
   </div>
 
@@ -354,15 +418,15 @@
       <table id="locationTable">
         <thead>
           <tr>
-            <th>Rank</th>
-            <th>Location</th>
-            <th><span class="def">Q2 Revenue<span class="def-tip"><strong>Q2 Revenue</strong>Total invoiced sales for this location April–June 2026, before any cost deductions.</span></span></th>
-            <th><span class="def">Gross Margin<span class="def-tip"><strong>Gross Margin</strong>Revenue minus cost of goods (materials + direct labor) as a percentage of revenue. Higher is better.<div class="tip-formula">= (Revenue − COGS) ÷ Revenue</div></span></span></th>
-            <th><span class="def">Cycle Time<span class="def-tip"><strong>Job Cycle Time</strong>Average calendar days from signed work order to installation sign-off. Network target is ≤ 4.5 days.</span></span></th>
-            <th><span class="def">Customer Satisfaction<span class="def-tip"><strong>Customer Satisfaction Score</strong>Average post-job star rating (1–5 scale) from customer surveys submitted within 30 days of job completion.</span></span></th>
-            <th><span class="def">Waste Rate<span class="def-tip"><strong>Material Waste Rate</strong>Percentage of ordered material that is discarded as offcut or damaged. Industry benchmark is ~5%.<div class="tip-formula">= (Ordered − Installed) ÷ Ordered</div></span></span></th>
-            <th><span class="def">Efficiency Score<span class="def-tip"><strong>Composite Efficiency Score</strong>Weighted index out of 100 combining four metrics.<div class="tip-formula">Gross Margin 40% · Cycle Time 25% · Customer Satisfaction 25% · Waste Rate 10%</div></span></span></th>
-            <th><span class="def">Trend<span class="def-tip"><strong>Revenue Trend</strong>Direction of this location's monthly revenue over the past 6 months relative to its own prior-period baseline.</span></span></th>
+            <th data-sort="rank">Rank</th>
+            <th data-sort="name">Location</th>
+            <th data-sort="revenue"><span class="def">Q2 Revenue<span class="def-tip"><strong>Q2 Revenue</strong>Total invoiced sales for this location April–June 2026, before any cost deductions.</span></span></th>
+            <th data-sort="margin"><span class="def">Gross Margin<span class="def-tip"><strong>Gross Margin</strong>Revenue minus cost of goods (materials + direct labor) as a percentage of revenue. Higher is better.<div class="tip-formula">= (Revenue − COGS) ÷ Revenue</div></span></span></th>
+            <th data-sort="cycle"><span class="def">Cycle Time<span class="def-tip"><strong>Job Cycle Time</strong>Average calendar days from signed work order to installation sign-off. Network target is ≤ 4.5 days.</span></span></th>
+            <th data-sort="csat"><span class="def">Customer Satisfaction<span class="def-tip"><strong>Customer Satisfaction Score</strong>Average post-job star rating (1–5 scale) from customer surveys submitted within 30 days of job completion.</span></span></th>
+            <th data-sort="waste"><span class="def">Waste Rate<span class="def-tip"><strong>Material Waste Rate</strong>Percentage of ordered material that is discarded as offcut or damaged. Industry benchmark is ~5%.<div class="tip-formula">= (Ordered − Installed) ÷ Ordered</div></span></span></th>
+            <th data-sort="score"><span class="def">Efficiency Score<span class="def-tip"><strong>Composite Efficiency Score</strong>Weighted index out of 100 combining four metrics.<div class="tip-formula">Gross Margin 40% · Cycle Time 25% · Customer Satisfaction 25% · Waste Rate 10%</div></span></span></th>
+            <th data-sort="trend"><span class="def">Trend<span class="def-tip"><strong>Revenue Trend</strong>Direction of this location's monthly revenue over the past 6 months relative to its own prior-period baseline.</span></span></th>
             <th>Status</th>
           </tr>
         </thead>
@@ -414,24 +478,25 @@
 <script>
 // ── Data ──────────────────────────────────────────────────────────────────────
 const locations = [
+  // Revenue ≠ efficiency — cross-metric variation intentional
   { name: "Nashville, TN",    revenue: 412000, margin: 51, cycle: 3.1, csat: 4.8, waste: 3.9 },
-  { name: "Charlotte, NC",    revenue: 388000, margin: 47, cycle: 3.6, csat: 4.7, waste: 4.2 },
+  { name: "Charlotte, NC",    revenue: 388000, margin: 42, cycle: 4.8, csat: 4.3, waste: 6.1 }, // high rev, slow cycle
   { name: "Austin, TX",       revenue: 371000, margin: 45, cycle: 3.8, csat: 4.6, waste: 4.5 },
-  { name: "Denver, CO",       revenue: 349000, margin: 43, cycle: 4.0, csat: 4.5, waste: 5.1 },
-  { name: "Phoenix, AZ",      revenue: 334000, margin: 41, cycle: 4.1, csat: 4.5, waste: 5.3 },
-  { name: "Atlanta, GA",      revenue: 318000, margin: 40, cycle: 4.2, csat: 4.4, waste: 5.5 },
-  { name: "Tampa, FL",        revenue: 302000, margin: 39, cycle: 4.3, csat: 4.4, waste: 5.6 },
-  { name: "Columbus, OH",     revenue: 289000, margin: 38, cycle: 4.4, csat: 4.3, waste: 5.8 },
+  { name: "Denver, CO",       revenue: 349000, margin: 36, cycle: 5.2, csat: 4.5, waste: 7.4 }, // high rev, poor margin/waste but customers happy
+  { name: "Phoenix, AZ",      revenue: 334000, margin: 41, cycle: 4.1, csat: 3.7, waste: 5.3 }, // solid ops, low csat
+  { name: "Atlanta, GA",      revenue: 318000, margin: 48, cycle: 3.5, csat: 4.7, waste: 4.1 }, // mid rev, top-tier ops
+  { name: "Tampa, FL",        revenue: 302000, margin: 33, cycle: 5.6, csat: 4.6, waste: 8.2 }, // slow & wasteful but customers love them
+  { name: "Columbus, OH",     revenue: 289000, margin: 44, cycle: 3.9, csat: 4.0, waste: 4.8 }, // strong ops, below-avg csat
   { name: "Raleigh, NC",      revenue: 275000, margin: 37, cycle: 4.5, csat: 4.3, waste: 6.0 },
-  { name: "Richmond, VA",     revenue: 261000, margin: 35, cycle: 4.7, csat: 4.2, waste: 6.3 },
-  { name: "Louisville, KY",   revenue: 248000, margin: 33, cycle: 4.9, csat: 4.1, waste: 6.7 },
-  { name: "Kansas City, MO",  revenue: 234000, margin: 32, cycle: 5.1, csat: 4.0, waste: 7.0 },
-  { name: "Indianapolis, IN", revenue: 221000, margin: 31, cycle: 5.3, csat: 3.9, waste: 7.4 },
-  { name: "St. Louis, MO",    revenue: 208000, margin: 29, cycle: 5.5, csat: 3.8, waste: 7.8 },
-  { name: "Tulsa, OK",        revenue: 196000, margin: 27, cycle: 5.8, csat: 3.7, waste: 8.3 },
-  { name: "Little Rock, AR",  revenue: 184000, margin: 26, cycle: 6.1, csat: 3.6, waste: 8.8 },
+  { name: "Richmond, VA",     revenue: 261000, margin: 46, cycle: 3.6, csat: 4.6, waste: 4.3 }, // lower rev, excellent ops
+  { name: "Louisville, KY",   revenue: 248000, margin: 30, cycle: 5.9, csat: 3.6, waste: 7.9 },
+  { name: "Kansas City, MO",  revenue: 234000, margin: 39, cycle: 6.3, csat: 4.4, waste: 5.6 }, // good margin/csat, very slow cycle
+  { name: "Indianapolis, IN", revenue: 221000, margin: 31, cycle: 4.1, csat: 3.9, waste: 7.4 }, // poor margin/waste but fast cycle
+  { name: "St. Louis, MO",    revenue: 208000, margin: 43, cycle: 3.7, csat: 4.5, waste: 4.9 }, // low rev, surprisingly efficient
+  { name: "Tulsa, OK",        revenue: 196000, margin: 27, cycle: 5.8, csat: 4.1, waste: 8.3 }, // poor financially, but ok csat
+  { name: "Little Rock, AR",  revenue: 184000, margin: 35, cycle: 4.6, csat: 3.4, waste: 5.8 }, // decent ops, low csat
   { name: "Memphis, TN",      revenue: 172000, margin: 25, cycle: 6.4, csat: 3.5, waste: 9.2 },
-  { name: "Wichita, KS",      revenue: 159000, margin: 24, cycle: 6.8, csat: 3.4, waste: 9.8 },
+  { name: "Wichita, KS",      revenue: 159000, margin: 24, cycle: 5.0, csat: 4.2, waste: 9.8 }, // worst margin/waste, but decent csat & cycle
 ];
 
 // Composite efficiency score: higher is better
@@ -465,41 +530,86 @@ function pillHTML(score) {
   return `<span class="pill ${t.label}">${t.label.charAt(0).toUpperCase() + t.label.slice(1)}</span>`;
 }
 
+// ── KPI cards ────────────────────────────────────────────────────────────────
+function renderKPIs(data) {
+  if (!data.length) {
+    ["revenue","margin","cycle","csat","waste"].forEach(k => {
+      document.getElementById(`kpi-${k}`).textContent = "—";
+      document.getElementById(`kpi-${k}-sub`).textContent = "No locations selected";
+    });
+    document.getElementById("kpiLabel").textContent = "Summary — 0 Locations Selected";
+    return;
+  }
+
+  const n = data.length;
+  const totalRev  = data.reduce((s, l) => s + l.revenue, 0);
+  const avgRev    = totalRev / n;
+  const avgMargin = data.reduce((s, l) => s + l.margin, 0) / n;
+  const avgCycle  = data.reduce((s, l) => s + l.cycle,  0) / n;
+  const avgCsat   = data.reduce((s, l) => s + l.csat,   0) / n;
+  const avgWaste  = data.reduce((s, l) => s + l.waste,  0) / n;
+
+  const label = n === scored.length ? `Network-Wide Summary — ${n} Locations` : `Filtered Summary — ${n} Location${n !== 1 ? "s" : ""}`;
+  document.getElementById("kpiLabel").textContent = label;
+
+  const fmt = v => v >= 1e6 ? `$${(v/1e6).toFixed(1)}M` : `$${Math.round(v/1000)}K`;
+  document.getElementById("kpi-revenue").textContent = fmt(totalRev);
+  document.getElementById("kpi-revenue-sub").textContent = `${fmt(Math.round(avgRev))} avg per location`;
+
+  document.getElementById("kpi-margin").textContent = `${avgMargin.toFixed(1)}%`;
+  const margins = data.map(l => l.margin);
+  document.getElementById("kpi-margin-sub").textContent = `Range: ${Math.min(...margins)}% – ${Math.max(...margins)}%`;
+
+  document.getElementById("kpi-cycle").textContent = `${avgCycle.toFixed(1)} days`;
+  document.getElementById("kpi-cycle-sub").textContent = avgCycle <= 4.5 ? "✓ At or below target (≤ 4.5 days)" : "Target: ≤ 4.5 days";
+
+  document.getElementById("kpi-csat").textContent = avgCsat.toFixed(2);
+  document.getElementById("kpi-csat-sub").textContent = "Out of 5.0";
+
+  document.getElementById("kpi-waste").textContent = `${avgWaste.toFixed(1)}%`;
+  document.getElementById("kpi-waste-sub").textContent = avgWaste <= 5 ? "✓ At or below benchmark (5%)" : "Industry benchmark: 5%";
+}
+
 // ── Efficiency Score bars (sidebar) ──────────────────────────────────────────
-const top6 = scored.slice(0, 6);
-const scoreList = document.getElementById("scoreList");
-scoreList.innerHTML = top6.map(l => {
-  const t = tierColor(l.score);
-  return `
-    <div class="score-row">
-      <span class="score-name" title="${l.name}">${l.name.split(",")[0]}</span>
-      <div class="score-bar-wrap">
-        <div class="score-bar" style="width:${l.score}%;background:${t.bg}"></div>
-      </div>
-      <span class="score-val">${l.score}</span>
-    </div>`;
-}).join("") + `<div style="font-size:11px;color:#a0aec0;margin-top:10px;text-align:center;">Showing top 6 · see full table below</div>`;
+const scoreListEl = document.getElementById("scoreList");
+
+function renderScoreList(data) {
+  const top6 = data.slice(0, 6);
+  const suffix = data.length > 6
+    ? `<div style="font-size:11px;color:#a0aec0;margin-top:10px;text-align:center;">Showing top 6 · see full table below</div>`
+    : "";
+  scoreListEl.innerHTML = top6.map(l => {
+    const t = tierColor(l.score);
+    return `
+      <div class="score-row">
+        <span class="score-name" title="${l.name}">${l.name.split(",")[0]}</span>
+        <div class="score-bar-wrap">
+          <div class="score-bar" style="width:${l.score}%;background:${t.bg}"></div>
+        </div>
+        <span class="score-val">${l.score}</span>
+      </div>`;
+  }).join("") + suffix;
+}
 
 // ── Bubble Chart ──────────────────────────────────────────────────────────────
-const bubbleData = scored.map(l => ({
-  x: l.revenue / 1000,
-  y: l.margin,
-  r: Math.sqrt(l.jobs) * 1.4,
-  label: l.name.split(",")[0],
-  score: l.score,
-}));
+function makeBubbleData(data) {
+  return data.map(l => ({
+    x: l.revenue / 1000,
+    y: l.margin,
+    r: Math.sqrt(l.jobs) * 1.4,
+    label: l.name.split(",")[0],
+    score: l.score,
+  }));
+}
 
-new Chart(document.getElementById("bubbleChart"), {
+const bubbleChart = new Chart(document.getElementById("bubbleChart"), {
   type: "bubble",
   data: {
     datasets: [{
       label: "Franchise Locations",
-      data: bubbleData,
-      backgroundColor: bubbleData.map(d => {
-        const t = tierColor(d.score);
-        return t.bg + "aa";
-      }),
-      borderColor: bubbleData.map(d => tierColor(d.score).bg),
+      data: makeBubbleData(scored),
+      backgroundColor: makeBubbleData(scored).map(d => tierColor(d.score).bg + "aa"),
+      borderColor: makeBubbleData(scored).map(d => tierColor(d.score).bg),
       borderWidth: 1.5,
     }]
   },
@@ -535,6 +645,14 @@ new Chart(document.getElementById("bubbleChart"), {
     }
   }
 });
+
+function renderBubble(data) {
+  const bd = makeBubbleData(data);
+  bubbleChart.data.datasets[0].data = bd;
+  bubbleChart.data.datasets[0].backgroundColor = bd.map(d => tierColor(d.score).bg + "aa");
+  bubbleChart.data.datasets[0].borderColor = bd.map(d => tierColor(d.score).bg);
+  bubbleChart.update();
+}
 
 // ── Trend Chart ──────────────────────────────────────────────────────────────
 const months = ["Jan", "Feb", "Mar", "Apr", "May", "Jun"];
@@ -592,35 +710,130 @@ new Chart(document.getElementById("trendChart"), {
   }
 });
 
-// ── Table ─────────────────────────────────────────────────────────────────────
+// ── Table with sort + filter ──────────────────────────────────────────────────
 const tbody = document.getElementById("tableBody");
-tbody.innerHTML = scored.map(l => {
-  const rank   = l.rank;
-  const rankCls = rank <= 3 ? "top3" : rank >= 16 ? "bot3" : "mid";
-  const trendHTML = l.trend === "up"
-    ? `<span class="trend-up">▲ Growing</span>`
-    : l.trend === "down"
-    ? `<span class="trend-down">▼ Declining</span>`
-    : `<span class="trend-flat">→ Stable</span>`;
-  const maxRev = scored[0].revenue;
-  const barColor = tierColor(l.score).bg;
+const maxRev = Math.max(...scored.map(l => l.revenue));
 
-  return `<tr>
-    <td><span class="rank ${rankCls}">${rank}</span></td>
-    <td><strong>${l.name}</strong></td>
-    <td>
-      <span class="mini-bar-wrap"><span class="mini-bar" style="width:${Math.round(l.revenue/maxRev*100)}%;background:${barColor}"></span></span>
-      $${(l.revenue / 1000).toFixed(0)}K
-    </td>
-    <td>${l.margin}%</td>
-    <td>${l.cycle} days</td>
-    <td>${l.csat.toFixed(1)} / 5.0</td>
-    <td>${l.waste}%</td>
-    <td><strong>${l.score}</strong> / 100</td>
-    <td>${trendHTML}</td>
-    <td>${pillHTML(l.score)}</td>
-  </tr>`;
-}).join("");
+let sortKey = "rank";
+let sortDir = "asc";
+let selectedNames = new Set(scored.map(l => l.name));
+
+function trendVal(t) { return t === "up" ? 2 : t === "flat" ? 1 : 0; }
+
+function getSorted(data) {
+  return [...data].sort((a, b) => {
+    let av = a[sortKey], bv = b[sortKey];
+    if (sortKey === "trend") { av = trendVal(a.trend); bv = trendVal(b.trend); }
+    if (sortKey === "name") { return sortDir === "asc" ? av.localeCompare(bv) : bv.localeCompare(av); }
+    return sortDir === "asc" ? av - bv : bv - av;
+  });
+}
+
+function renderTable() {
+  const visible = scored.filter(l => selectedNames.has(l.name));
+  const sorted  = getSorted(visible);
+  tbody.innerHTML = sorted.map((l, i) => {
+    const displayRank = i + 1;
+    const totalVisible = visible.length;
+    const rankCls = displayRank <= 3 ? "top3" : displayRank >= totalVisible - 2 ? "bot3" : "mid";
+    const trendHTML = l.trend === "up"
+      ? `<span class="trend-up">▲ Growing</span>`
+      : l.trend === "down"
+      ? `<span class="trend-down">▼ Declining</span>`
+      : `<span class="trend-flat">→ Stable</span>`;
+    const barColor = tierColor(l.score).bg;
+    return `<tr>
+      <td><span class="rank ${rankCls}">${displayRank}</span></td>
+      <td><strong>${l.name}</strong></td>
+      <td style="white-space:nowrap">
+        <span class="mini-bar-wrap"><span class="mini-bar" style="width:${Math.round(l.revenue/maxRev*100)}%;background:${barColor}"></span></span>$${(l.revenue / 1000).toFixed(0)}K
+      </td>
+      <td>${l.margin}%</td>
+      <td>${l.cycle} days</td>
+      <td>${l.csat.toFixed(1)} / 5.0</td>
+      <td>${l.waste}%</td>
+      <td><strong>${l.score}</strong> / 100</td>
+      <td>${trendHTML}</td>
+      <td>${pillHTML(l.score)}</td>
+    </tr>`;
+  }).join("");
+}
+
+function updateSortHeaders() {
+  document.querySelectorAll("thead th[data-sort]").forEach(th => {
+    th.classList.remove("sort-asc", "sort-desc");
+    if (th.dataset.sort === sortKey) th.classList.add(sortDir === "asc" ? "sort-asc" : "sort-desc");
+  });
+}
+
+document.querySelectorAll("thead th[data-sort]").forEach(th => {
+  th.addEventListener("click", () => {
+    if (sortKey === th.dataset.sort) {
+      sortDir = sortDir === "asc" ? "desc" : "asc";
+    } else {
+      sortKey = th.dataset.sort;
+      sortDir = sortKey === "rank" || sortKey === "name" || sortKey === "cycle" || sortKey === "waste" ? "asc" : "desc";
+    }
+    updateSortHeaders();
+    renderTable();
+  });
+});
+
+// ── Filter ────────────────────────────────────────────────────────────────────
+const filterBtn   = document.getElementById("filterBtn");
+const filterPanel = document.getElementById("filterPanel");
+const filterBtnLabel = document.getElementById("filterBtnLabel");
+const filterOptions  = document.getElementById("filterOptions");
+
+filterOptions.innerHTML = scored.map(l => `
+  <label class="filter-option">
+    <input type="checkbox" value="${l.name}" checked>
+    ${l.name}
+  </label>`).join("");
+
+filterBtn.addEventListener("click", e => {
+  e.stopPropagation();
+  filterPanel.classList.toggle("open");
+});
+document.addEventListener("click", () => filterPanel.classList.remove("open"));
+filterPanel.addEventListener("click", e => e.stopPropagation());
+
+function updateFilter() {
+  selectedNames = new Set(
+    [...filterPanel.querySelectorAll("input[type=checkbox]:checked")].map(cb => cb.value)
+  );
+  const n = selectedNames.size;
+  filterBtnLabel.textContent = n === scored.length ? `All ${scored.length} locations` : `${n} location${n !== 1 ? "s" : ""} selected`;
+  const visible = scored.filter(l => selectedNames.has(l.name));
+  renderKPIs(visible);
+  renderScoreList(visible);
+  renderBubble(visible);
+  renderTable();
+}
+
+filterPanel.querySelectorAll("input[type=checkbox]").forEach(cb =>
+  cb.addEventListener("change", updateFilter)
+);
+
+document.getElementById("selectAllBtn").addEventListener("click", () => {
+  filterPanel.querySelectorAll("input[type=checkbox]").forEach(cb => cb.checked = true);
+  updateFilter();
+});
+document.getElementById("clearAllBtn").addEventListener("click", () => {
+  filterPanel.querySelectorAll("input[type=checkbox]").forEach(cb => cb.checked = false);
+  updateFilter();
+});
+document.getElementById("resetFilterBtn").addEventListener("click", () => {
+  filterPanel.querySelectorAll("input[type=checkbox]").forEach(cb => cb.checked = true);
+  sortKey = "rank"; sortDir = "asc";
+  updateSortHeaders();
+  updateFilter();
+});
+
+renderKPIs(scored);
+renderScoreList(scored);
+updateSortHeaders();
+renderTable();
 // ── Tooltip show/hide + cursor tracking ──────────────────────────────────────
 let activeTip = null;
 
