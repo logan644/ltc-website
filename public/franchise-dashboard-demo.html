@@ -336,7 +336,7 @@
     <div class="kpi-card blue" data-icon="💰">
       <div class="kpi-label">
         <span class="def">Total Revenue (Q2)
-          <span class="def-tip"><strong>Total Revenue (Q2)</strong>Sum of all invoiced sales across the selected locations for the quarter, before any cost deductions.<div class="tip-formula">= Σ(location revenue) · Apr – Jun</div></span>
+          <span class="def-tip"><strong>Total Revenue (Q2)</strong>Sum of all invoiced sales across the selected locations for the quarter, before any cost deductions.<div class="tip-formula">= location revenue Apr - Jun</div></span>
         </span>
       </div>
       <div class="kpi-value" id="kpi-revenue">$4.7M</div>
@@ -354,7 +354,7 @@
     <div class="kpi-card amber" data-icon="⏱">
       <div class="kpi-label">
         <span class="def">Avg Job Cycle Time
-          <span class="def-tip"><strong>Avg Job Cycle Time</strong>Average number of calendar days from signed work order to completed installation sign-off, averaged across all jobs in the period.<div class="tip-formula">= Avg(install complete date − order date) · selected locations</div></span>
+          <span class="def-tip"><strong>Avg Job Cycle Time</strong>Average number of calendar days from signed work order to completed sign-off, averaged across all jobs in the period.<div class="tip-formula">= Avg(job complete date − order date) · selected locations</div></span>
         </span>
       </div>
       <div class="kpi-value" id="kpi-cycle">4.8 days</div>
@@ -372,7 +372,7 @@
     <div class="kpi-card red" data-icon="🔄">
       <div class="kpi-label">
         <span class="def">Avg Waste Rate
-          <span class="def-tip"><strong>Material Waste Rate</strong>Percentage of material ordered that is discarded as offcut or damaged — not installed. Industry benchmark is ~5%.<div class="tip-formula">= (Material ordered − Material installed) ÷ Material ordered</div></span>
+          <span class="def-tip"><strong>Material Waste Rate</strong>Percentage of material ordered that is discarded or damaged — not used. Industry benchmark is ~5%.<div class="tip-formula">= (Material ordered − Material used) ÷ Material ordered</div></span>
         </span>
       </div>
       <div class="kpi-value" id="kpi-waste">6.4%</div>
@@ -421,9 +421,9 @@
             <th data-sort="name">Location</th>
             <th data-sort="revenue"><span class="def">Q2 Revenue<span class="def-tip"><strong>Q2 Revenue</strong>Total invoiced sales for this location April–June 2026, before any cost deductions.</span></span></th>
             <th data-sort="margin"><span class="def">Gross Margin<span class="def-tip"><strong>Gross Margin</strong>Revenue minus cost of goods (materials + direct labor) as a percentage of revenue. Higher is better.<div class="tip-formula">= (Revenue − COGS) ÷ Revenue</div></span></span></th>
-            <th data-sort="cycle"><span class="def">Cycle Time<span class="def-tip"><strong>Job Cycle Time</strong>Average calendar days from signed work order to installation sign-off. Network target is ≤ 4.5 days.</span></span></th>
+            <th data-sort="cycle"><span class="def">Cycle Time<span class="def-tip"><strong>Job Cycle Time</strong>Average calendar days from signed work order to job sign-off. Network target is ≤ 4.5 days.</span></span></th>
             <th data-sort="csat"><span class="def">Customer Satisfaction<span class="def-tip"><strong>Customer Satisfaction Score</strong>Average post-job star rating (1–5 scale) from customer surveys submitted within 30 days of job completion.</span></span></th>
-            <th data-sort="waste"><span class="def">Waste Rate<span class="def-tip"><strong>Material Waste Rate</strong>Percentage of ordered material that is discarded as offcut or damaged. Industry benchmark is ~5%.<div class="tip-formula">= (Ordered − Installed) ÷ Ordered</div></span></span></th>
+            <th data-sort="waste"><span class="def">Waste Rate<span class="def-tip"><strong>Material Waste Rate</strong>Percentage of ordered material that is discarded or damaged. Industry benchmark is ~5%.<div class="tip-formula">= (Ordered − Installed) ÷ Ordered</div></span></span></th>
             <th data-sort="score"><span class="def">Efficiency Score<span class="def-tip"><strong>Composite Efficiency Score</strong>Weighted index out of 100 combining four metrics.<div class="tip-formula">Gross Margin 40% · Cycle Time 25% · Customer Satisfaction 25% · Waste Rate 10%</div></span></span></th>
             <th data-sort="trend"><span class="def">Trend<span class="def-tip"><strong>Revenue Trend</strong>Direction of this location's monthly revenue over the past 6 months relative to its own prior-period baseline.</span></span></th>
             <th>Status</th>
@@ -455,7 +455,7 @@
       <div class="insight-icon">📦</div>
       <div>
         <div class="insight-title">Material Waste Improving Network-Wide</div>
-        <div class="insight-body">Q2 waste rates dropped 1.2 pts after the Q1 vendor consolidation. However, 5 locations still exceed 8%. Targeted training on cut-plan optimization could close this gap.</div>
+        <div class="insight-body">Q2 waste rates dropped 1.2 pts after the Q1 vendor consolidation. However, 5 locations still exceed 8%. Targeted training on best practices could close this gap.</div>
       </div>
     </div>
     <div class="insight-card info">
