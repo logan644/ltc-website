@@ -76,7 +76,7 @@ export default function Services() {
             What I can do for your business
           </h2>
           <p className="text-slate-600 text-lg">
-            Project-based engagements with clear deliverables. I take on a
+            Project-based engagements with clear deliverables. I work with
             one client at a time to ensure every engagement
             gets the attention it deserves.
           </p>
